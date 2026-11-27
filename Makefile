@@ -20,6 +20,28 @@ PLUGIN             ?= email
 
 .PHONY: build-embed prepare-embed test-embed build-image-embed
 .PHONY: verify verify-all frontend-install frontend-build frontend-verify setup-hooks
+.PHONY: preview preview-refresh preview-status preview-url preview-check preview-stop preview-destroy
+
+preview:
+	python3 -B scripts/preview.py up
+
+preview-refresh:
+	python3 -B scripts/preview.py refresh
+
+preview-status:
+	python3 -B scripts/preview.py status
+
+preview-url:
+	@python3 -B scripts/preview.py url
+
+preview-check:
+	python3 -B scripts/preview.py check
+
+preview-stop:
+	python3 -B scripts/preview.py stop --if-exists
+
+preview-destroy:
+	python3 -B scripts/preview.py destroy --if-exists
 
 verify:
 	python3 -B scripts/verify.py

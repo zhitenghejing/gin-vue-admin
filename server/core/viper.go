@@ -5,9 +5,11 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strconv"
 
 	"github.com/flipped-aurora/gin-vue-admin/server/core/internal"
 	"github.com/flipped-aurora/gin-vue-admin/server/global"
+	"github.com/flipped-aurora/gin-vue-admin/server/internal/preview"
 	"github.com/fsnotify/fsnotify"
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/viper"
@@ -31,14 +33,28 @@ func Viper() *viper.Viper {
 		if err = v.Unmarshal(&global.GVA_CONFIG); err != nil {
 			fmt.Println(err)
 		}
+		configurePreview()
 	})
 	if err = v.Unmarshal(&global.GVA_CONFIG); err != nil {
 		panic(fmt.Errorf("fatal error unmarshal config: %w", err))
 	}
+	configurePreview()
 
 	// root 适配性 根据root位置去找到对应迁移位置,保证root路径有效
 	global.GVA_CONFIG.AutoCode.Root, _ = filepath.Abs("..")
 	return v
+}
+
+func configurePreview() {
+	if os.Getenv("GVA_PREVIEW_BUILD_ID") != "" {
+		port, err := strconv.Atoi(os.Getenv("GVA_PREVIEW_PORT"))
+		if err != nil {
+			panic(fmt.Errorf("invalid GVA_PREVIEW_PORT: %w", err))
+		}
+		if err := preview.Configure(&global.GVA_CONFIG, os.Getenv("GVA_PREVIEW_DATA_DIR"), port); err != nil {
+			panic(err)
+		}
+	}
 }
 
 // getConfigPath 获取配置文件路径, 优先级: 命令行 > 环境变量 > 默认值

@@ -983,14 +983,12 @@
 
 <script setup>
 import { computed, nextTick, onMounted, reactive, ref, watch } from 'vue'
-import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   Delete,
   DocumentCopy,
   MagicStick,
   Plus,
-  Promotion,
   RefreshRight
 } from '@element-plus/icons-vue'
 import {
@@ -1007,7 +1005,6 @@ import { useUserStore } from '@/pinia/modules/user'
 
 defineOptions({ name: 'AIWorkflow' })
 
-const router = useRouter()
 const userStore = useUserStore()
 const SETTINGS_KEY = 'gva_ai_workflow_settings'
 const ACTIVE_SESSION_KEY = 'gva_ai_workflow_active_session_ids'
@@ -2401,7 +2398,6 @@ const fillExample = () => {
   workflowForm.flowType = 'gva_codegen'
   workflowForm.extraConstraints = '每一步都给出可复制 Prompt，并说明预期输出。'
 }
-const goAutoCode = () => router.push({ name: 'autoCode' })
 
 onMounted(async () => {
   await Promise.all([loadSessionList('analysis'), loadSessionList('workflow')])

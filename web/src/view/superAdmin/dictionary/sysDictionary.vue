@@ -353,7 +353,7 @@
   } from '@/api/sysDictionary' // 此处请自行替换地址
   import { llmAuto } from '@/api/autoCode'
   import WarningBar from '@/components/warningBar/warningBar.vue'
-  import { ref, computed, watch } from 'vue'
+  import { ref, watch } from 'vue'
   import { ElMessage, ElMessageBox } from 'element-plus'
 
   import sysDictionaryDetail from './sysDictionaryDetail.vue'
@@ -429,11 +429,6 @@
     focused.value = false
   }
 
-  // 触发图片选择
-  const triggerImageSelect = () => {
-    imageFileInputRef.value?.click()
-  }
-
   const handlePaste = (event) => {
     const items = event.clipboardData.items;
     for (let i = 0; i < items.length; i++) {
@@ -494,11 +489,6 @@
     }
   })
 
-  // 格式化JSON预览
-  const jsonPreviewFormatted = computed(() => {
-    if (!jsonPreview.value) return ''
-    return JSON.stringify(jsonPreview.value, null, 2)
-  })
 
 
   // 查询
@@ -679,12 +669,12 @@
   }
 
   // 处理拖拽进入
-  const handleDragOver = (e) => {
+  const handleDragOver = () => {
     isDragging.value = true
   }
 
   // 处理拖拽离开
-  const handleDragLeave = (e) => {
+  const handleDragLeave = () => {
     isDragging.value = false
   }
   // 处理文件拖拽

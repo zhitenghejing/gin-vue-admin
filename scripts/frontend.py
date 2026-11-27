@@ -50,6 +50,7 @@ def main():
     check_toolchain()
     run("install", "--frozen-lockfile", "--prod=false")
     if action == "verify":
+        run("lint")
         run("test")
     if action != "install":
         run("run", "build", embedded=action in ("verify", "embed"))

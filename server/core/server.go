@@ -2,10 +2,14 @@ package core
 
 import (
 	"fmt"
+	"net"
+	"os"
+	"strconv"
 	"time"
 
 	"github.com/flipped-aurora/gin-vue-admin/server/global"
 	"github.com/flipped-aurora/gin-vue-admin/server/initialize"
+	"github.com/flipped-aurora/gin-vue-admin/server/internal/preview"
 	"github.com/flipped-aurora/gin-vue-admin/server/internal/webui"
 	mcpTool "github.com/flipped-aurora/gin-vue-admin/server/mcp"
 	"github.com/flipped-aurora/gin-vue-admin/server/service/system"
@@ -37,6 +41,8 @@ func RunServer() {
 		return
 	}
 	address := fmt.Sprintf(":%d", global.GVA_CONFIG.System.Addr)
+	listenAddress := net.JoinHostPort(global.GVA_CONFIG.System.ListenHost, strconv.Itoa(global.GVA_CONFIG.System.Addr))
+	handler = preview.WithBuildID(handler, os.Getenv("GVA_PREVIEW_BUILD_ID"))
 	mcpBaseURL := mcpTool.ResolveMCPServiceURL()
 	frontendURL := "http://127.0.0.1:8080"
 	if webui.Enabled {
@@ -55,5 +61,5 @@ func RunServer() {
 	默认前端文件运行地址:%s
 `, global.Version, address, mcpBaseURL, frontendURL)
 
-	initServer(address, handler, 10*time.Minute, 10*time.Minute)
+	initServer(listenAddress, handler, 10*time.Minute, 10*time.Minute)
 }

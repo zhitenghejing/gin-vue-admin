@@ -21,6 +21,7 @@
 
 - `relations/repo-profile.md`: 项目定位、技术栈、核心特性
 - `relations/development-workflow.md`: 统一工具链、验证入口、任务生命周期与交付
+- `relations/worktree-preview.md`: worktree 回环预览、版本核验、数据与清理
 - `relations/development-workflow-validation.md`: 工作流验证记录、已有基线与未验证范围
 - `relations/embedded-web.md`: Go 内嵌前端的可选发行构建、URL 契约与验证
 - `relations/licensing-and-branding.md`: 版权、授权与品牌相关任务的协作边界

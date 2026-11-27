@@ -35,22 +35,22 @@ make verify-all
 
 | 入口 | 执行范围 |
 | --- | --- |
-| `make verify` | 相对基线的 Go 文件格式、工作流设施测试、冻结安装、前端 Node 测试与生产构建、普通 Go 全包构建与测试、embed 全包构建及资源/路由测试 |
+| `make verify` | 相对基线的 Go 文件格式、工作流设施测试、冻结安装、前端 lint、Node 测试与生产构建、普通 Go 全包构建与测试、embed 全包构建及资源/路由测试 |
 | `make verify-all` | 上述内容，加全包 Go vet、全包竞态测试及 embed 资源/路由竞态测试 |
 | `make frontend-build` | 冻结安装并构建前端 |
-| `make frontend-verify` | 冻结安装、前端测试与构建，准备嵌入目录 |
+| `make frontend-verify` | 冻结安装、前端 lint/测试与构建，准备嵌入目录 |
 | `make build-embed` | 构建并嵌入当前前端，输出 `build/server` |
 
 本地、pre-push、Paseo 和 CI 调用同一验证器；CI 执行 `make verify-all`。Go 命令在 `server/` 下运行，前端命令在 `web/` 下运行。检查保留失败退出码，测试输出分别统计通过、失败和跳过；跳过不计作已验证。当前前端构建失败时不使用旧 dist 执行 embed 检查。
 
 格式检查默认相对 main 的 merge-base（不存在则用 HEAD），并包含未跟踪文件。需要固定基线时设置 `GVA_VERIFY_BASE=<commit>`；CI 使用事件基线。Go 格式检查覆盖变更文件，构建和测试始终覆盖全包。普通 Go 构建仍无需前端产物。
 
-前端 `pnpm lint` 是显式专项检查，目前旧源码存在 lint 基线问题，尚未加入默认门禁；`verify-all` 不代表这些问题已通过或被修复。具体基线与实际验证结果见[工作流验证记录](development-workflow-validation.md)。
+前端 `pnpm lint` 已纳入默认门禁，历史 34 项错误已清理，规则保持不变。具体基线与实际验证结果见[工作流验证记录](development-workflow-validation.md)。
 
 ## 验收与交付
 
 根据变更选择实际 UI/API 场景，覆盖成功、错误及权限拒绝。交付记录包含版本、命令、实际结果、验收步骤和未验证项；将自动测试、Agent 浏览器检查、人工验收及发布结果分别说明。
 
-本阶段没有移植 Nightingale 的隔离预览管理器、域名槽位或 build ID 系统。需要运行实例验收时显式准备隔离配置与数据，不把 Nightingale 的地址或数据用于本项目。后续预览需单独适配 YAML、初始化、JWT 和上传目录。
+使用 `make preview` 创建 worktree 独立的回环预览，修改后执行 `make preview-refresh`，验收前执行 `make preview-check` 并核对 `sourceChanged=false`。命令、数据边界、版本核验和清理见[预览运行手册](worktree-preview.md)。可显式启用局域网网关、临时或命名公网隧道，地址和探测结果由 status 返回；命名隧道需先完成 DNS 授权和路由。当前 worktree 固定公网入口为 `https://gva-dev1.zhiteng.win`，不使用 Nightingale 的地址或数据。
 
 提交使用 `type(scope): description`。沿用会话中的授权完成提交、推送、PR、合并和发布；有本地通过记录不代表远端 CI 或人工验收已通过。接口、配置与使用行为变化时同步相关文档和需求记忆。

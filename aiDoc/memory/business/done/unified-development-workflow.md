@@ -26,4 +26,4 @@
 
 - 工具链、锁文件、统一验证器、Git hook、Paseo 脚本与 CI 已接入。
 - 普通与完整验证通过，Go 测试 111 项、embed 23 项（含子测试和重叠），完整 vet 与竞态检查通过；5 项设施测试及前端测试通过。
-- 基线修复与实际验证记录见 `aiDoc/relations/development-workflow-validation.md`。前端 lint 的 34 个历史错误仍为明确待清理项，未计作通过；远端 CI、人工验收与部署未执行。
+- 第一阶段的基线修复与实际验证记录见 `aiDoc/relations/development-workflow-validation.md`。当时前端 lint 的 34 个历史错误未清理，远端 CI、人工验收与部署未执行。后续 lint 清理和隔离预览已完成，见[后续需求记录](lint-and-worktree-previews.md)；各阶段验证结果以验证记录对应章节为准。
