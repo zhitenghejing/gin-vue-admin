@@ -45,6 +45,26 @@ jobs:
           npm run build
         working-directory: ./web
 
+  embedded:
+    if: github.event_name == 'push' || github.event_name == 'pull_request' || github.event_name == 'release'
+    name: Embedded frontend release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.26.10'
+      - name: Enable pnpm
+        run: corepack enable && corepack prepare pnpm@10.34.8 --activate
+      - name: Build embedded release
+        run: make build-embed
+      - name: Test embedded routing and actual frontend assets
+        run: go test -tags embedweb ./internal/webui
+        working-directory: ./server
+
   backend:
     if: github.event_name == 'push' || github.event_name == 'pull_request' || github.event_name == 'release'
     name: Backend go

@@ -1,0 +1,10 @@
+.git
+web/node_modules
+web/dist
+server/internal/webui/dist
+build
+server/server
+server/log
+server/uploads
+**/*.local.yaml
+**/*.db

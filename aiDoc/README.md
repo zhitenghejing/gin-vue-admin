@@ -21,6 +21,7 @@
 
 - `relations/repo-profile.md`: 项目定位、技术栈、核心特性
 - `relations/development-workflow.md`: GVA 开发流程、分支与提交规范
+- `relations/embedded-web.md`: Go 内嵌前端的可选发行构建、URL 契约与验证
 - `relations/licensing-and-branding.md`: 版权、授权与品牌相关任务的协作边界
 - `modules/backend-layer-rules.md`: 后端分层、`enter.go`、统一响应、Swagger 约束
 - `modules/plugin-development.md`: 前后端插件结构与开发流程

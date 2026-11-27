@@ -1,4 +1,5 @@
 SHELL = /bin/bash
+.DEFAULT_GOAL := build
 
 #SCRIPT_DIR         = $(shell pwd)/etc/script
 #请选择golang版本
@@ -16,6 +17,27 @@ REPOSITORY          = registry.cn-hangzhou.aliyuncs.com/${IMAGE_NAME}
 #镜像版本
 TAGS_OPT           ?= latest
 PLUGIN             ?= email
+
+.PHONY: build-embed prepare-embed test-embed build-image-embed
+
+# 可选发行模式：固定同源 /api，保留普通开发构建。
+prepare-embed:
+	cd web && pnpm install && VITE_BASE_API=/api VITE_FILE_API=/api pnpm run build
+	test -s web/dist/index.html
+	rm -rf server/internal/webui/dist
+	mkdir -p server/internal/webui/dist
+	cp -R web/dist/. server/internal/webui/dist/
+
+build-embed: prepare-embed
+	mkdir -p build
+	cd server && go build -tags embedweb -o ../build/server .
+
+# 先生成真实前端产物，再验证发行构建。
+test-embed: prepare-embed
+	cd server && go test -tags embedweb ./internal/webui
+
+build-image-embed:
+	docker build -f deploy/docker/Dockerfile.embed -t ${REPOSITORY}/server-embed:${TAGS_OPT} .
 
 #容器环境前后端共同打包
 build: build-web build-server

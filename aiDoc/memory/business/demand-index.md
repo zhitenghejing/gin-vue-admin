@@ -6,4 +6,4 @@
 
 ## Done
 
-- 暂无
+- [Go 内嵌前端发行模式](aiDoc/memory/business/done/embedded-web.md)：可选 embedweb 构建、Go 入口分流与发行验证。

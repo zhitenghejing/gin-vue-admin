@@ -15,6 +15,16 @@
 - 后端必须提供完整而准确的 Swagger 接口说明
 - 前端接口调用应以实际 Swagger 与后端实现为准
 
+## 可选内嵌前端发行模式
+
+- `make build-embed` 构建前端后，将 `web/dist` 复制到 `server/internal/webui/dist`，使用 `embedweb` 标签编译 Go；生成目录不提交。
+- 普通 `go build` / `go run` 保持原有行为，无需前端产物，开发仍使用 Vite。
+- 内嵌模式固定前端 `VITE_BASE_API=/api`、`VITE_FILE_API=/api`；Go HTTP 入口剥离 `/api` 后交给原有 Gin，保持上传、Swagger、鉴权和业务接口契约。
+- 内嵌模式要求 `system.router-prefix` 为空；非空时启动失败并输出明确原因，防止双重前缀。
+- 页面部署在根路径，沿用 Hash 路由。仅提供产物中的普通文件，禁止目录列表；未知地址不回退到 HTML，仍由 Gin 处理原生 API 或返回 404。
+- HTML 与静态资源使用 `Cache-Control: no-cache`；当前版本未增加预压缩或旧版本 chunk 保留策略。
+- 详情见 `aiDoc/relations/embedded-web.md`。
+
 ## 变更规则
 
 - 涉及破坏性接口调整时，要先写清楚变更范围
