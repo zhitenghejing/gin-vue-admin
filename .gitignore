@@ -34,7 +34,7 @@ server/uploads/
 
 *.iml
 web/.pnpm-debug.log
-web/pnpm-lock.yaml
+__pycache__/
 
 # binary files
 *.exe

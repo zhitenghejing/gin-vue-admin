@@ -7,6 +7,7 @@ import (
 )
 
 func TestPluginGenModel_Injection(t *testing.T) {
+	setupASTFixture(t)
 	type fields struct {
 		Type        Type
 		Path        string
@@ -55,7 +56,7 @@ func TestPluginGenModel_Injection(t *testing.T) {
 			}
 			file, err := a.Parse(a.Path, nil)
 			if err != nil {
-				t.Errorf("Parse() error = %v, wantErr %v", err, tt.wantErr)
+				t.Fatalf("Parse() error = %v, wantErr %v", err, tt.wantErr)
 			}
 			a.Injection(file)
 			err = a.Format(a.Path, nil, file)
@@ -67,6 +68,7 @@ func TestPluginGenModel_Injection(t *testing.T) {
 }
 
 func TestPluginGenModel_Rollback(t *testing.T) {
+	setupASTFixture(t)
 	type fields struct {
 		Type        Type
 		Path        string
@@ -115,7 +117,7 @@ func TestPluginGenModel_Rollback(t *testing.T) {
 			}
 			file, err := a.Parse(a.Path, nil)
 			if err != nil {
-				t.Errorf("Parse() error = %v, wantErr %v", err, tt.wantErr)
+				t.Fatalf("Parse() error = %v, wantErr %v", err, tt.wantErr)
 			}
 			a.Rollback(file)
 			err = a.Format(a.Path, nil, file)

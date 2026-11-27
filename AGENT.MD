@@ -32,6 +32,11 @@
 
 ## 工程规则
 
+### 开发与验证
+
+- 开始任务、实施、审查和交付时遵循 `aiDoc/relations/development-workflow.md`。
+- 本地、pre-push、Paseo 与 CI 共用 `make verify`；完整 vet 与竞态检查使用 `make verify-all`。交付时区分通过、失败、跳过和未验证项。
+
 ### 架构
 
 - 保持现有后端分层：`Router -> API -> Service -> Model`

@@ -1,0 +1,11 @@
+{
+  "worktree": {
+    "setup": "bash scripts/install-git-hooks.sh"
+  },
+  "scripts": {
+    "install": { "command": "cd server && go mod download && cd .. && make frontend-install" },
+    "verify": { "command": "make verify" },
+    "verify-all": { "command": "make verify-all" },
+    "build-embed": { "command": "make build-embed" }
+  }
+}

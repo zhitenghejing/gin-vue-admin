@@ -2,107 +2,85 @@ package system
 
 import (
 	"context"
-	"reflect"
+	"os"
+	"path/filepath"
+	"runtime"
 	"testing"
 
+	"github.com/flipped-aurora/gin-vue-admin/server/global"
 	model "github.com/flipped-aurora/gin-vue-admin/server/model/system"
 	"github.com/flipped-aurora/gin-vue-admin/server/model/system/request"
+	"github.com/glebarez/sqlite"
+	"gorm.io/gorm"
 )
 
-func Test_autoCodePackage_Create(t *testing.T) {
-	type args struct {
-		ctx  context.Context
-		info *request.SysAutoCodePackageCreate
+func setupAutoCode(t *testing.T) {
+	t.Helper()
+	_, file, _, _ := runtime.Caller(0)
+	server := filepath.Clean(filepath.Join(filepath.Dir(file), "../.."))
+	root := t.TempDir()
+	oldConfig, oldDB := global.GVA_CONFIG.AutoCode, global.GVA_DB
+	t.Cleanup(func() { global.GVA_CONFIG.AutoCode, global.GVA_DB = oldConfig, oldDB })
+	global.GVA_CONFIG.AutoCode.Root = root
+	global.GVA_CONFIG.AutoCode.Server = "server"
+	global.GVA_CONFIG.AutoCode.Web = "web/src"
+	global.GVA_CONFIG.AutoCode.Module = "github.com/flipped-aurora/gin-vue-admin/server"
+	for _, dir := range []string{"resource", "api", "router", "service", "plugin", "initialize"} {
+		if err := os.CopyFS(filepath.Join(root, "server", dir), os.DirFS(filepath.Join(server, dir))); err != nil {
+			t.Fatal(err)
+		}
 	}
-	tests := []struct {
-		name    string
-		args    args
-		wantErr bool
-	}{
-		{
-			name: "测试 package",
-			args: args{
-				ctx: context.Background(),
-				info: &request.SysAutoCodePackageCreate{
-					Template:    "package",
-					PackageName: "gva",
-				},
-			},
-			wantErr: false,
-		},
-		{
-			name: "测试 plugin",
-			args: args{
-				ctx: context.Background(),
-				info: &request.SysAutoCodePackageCreate{
-					Template:    "plugin",
-					PackageName: "gva",
-				},
-			},
-			wantErr: false,
-		},
+	db, err := gorm.Open(sqlite.Open(filepath.Join(root, "test.db")), &gorm.Config{})
+	if err != nil {
+		t.Fatal(err)
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			a := &autoCodePackage{}
-			if err := a.Create(tt.args.ctx, tt.args.info); (err != nil) != tt.wantErr {
-				t.Errorf("Create() error = %v, wantErr %v", err, tt.wantErr)
+	sqlDB, err := db.DB()
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { sqlDB.Close() })
+	if err := db.AutoMigrate(&model.SysAutoCodePackage{}, &model.SysAutoCodeHistory{}); err != nil {
+		t.Fatal(err)
+	}
+	global.GVA_DB = db
+}
+
+func TestAutoCodePackageCreate(t *testing.T) {
+	for _, kind := range []string{"package", "plugin"} {
+		t.Run(kind, func(t *testing.T) {
+			setupAutoCode(t)
+			info := request.SysAutoCodePackageCreate{Template: kind, PackageName: "gva"}
+			if err := AutoCodePackage.Create(context.Background(), &info); err != nil {
+				t.Fatal(err)
+			}
+			var stored model.SysAutoCodePackage
+			if err := global.GVA_DB.First(&stored, "package_name = ?", "gva").Error; err != nil {
+				t.Fatal(err)
+			}
+			if stored.Template != kind {
+				t.Fatalf("got template %q", stored.Template)
+			}
+			path := filepath.Join(global.GVA_CONFIG.AutoCode.Root, "server/api/v1/gva/enter.go")
+			if kind == "plugin" {
+				path = filepath.Join(global.GVA_CONFIG.AutoCode.Root, "server/plugin/gva/plugin.go")
+			}
+			if _, err := os.Stat(path); err != nil {
+				t.Fatal(err)
+			}
+			if err := AutoCodePackage.Create(context.Background(), &info); err == nil {
+				t.Fatal("duplicate package accepted")
 			}
 		})
 	}
 }
 
-func Test_autoCodePackage_templates(t *testing.T) {
-	type args struct {
-		ctx       context.Context
-		entity    model.SysAutoCodePackage
-		info      request.AutoCode
-		isPackage bool
+func TestAutoCodePackageTemplates(t *testing.T) {
+	setupAutoCode(t)
+	codes, injections, creates, err := AutoCodePackage.templates(context.Background(), model.SysAutoCodePackage{Template: "plugin", PackageName: "preview"}, request.AutoCode{Package: "preview", Module: global.GVA_CONFIG.AutoCode.Module}, true)
+	if err != nil {
+		t.Fatal(err)
 	}
-	tests := []struct {
-		name      string
-		args      args
-		wantCode  map[string]string
-		wantEnter map[string]map[string]string
-		wantErr   bool
-	}{
-		{
-			name: "测试1",
-			args: args{
-				ctx: context.Background(),
-				entity: model.SysAutoCodePackage{
-					Desc:        "描述",
-					Label:       "展示名",
-					Template:    "plugin",
-					PackageName: "preview",
-				},
-				info: request.AutoCode{
-					Abbreviation:    "user",
-					HumpPackageName: "user",
-				},
-				isPackage: false,
-			},
-			wantErr: false,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			s := &autoCodePackage{}
-			gotCode, gotEnter, gotCreates, err := s.templates(tt.args.ctx, tt.args.entity, tt.args.info, tt.args.isPackage)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("templates() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			for key, value := range gotCode {
-				t.Logf("\n")
-				t.Logf(key)
-				t.Logf(value)
-				t.Logf("\n")
-			}
-			t.Log(gotCreates)
-			if !reflect.DeepEqual(gotEnter, tt.wantEnter) {
-				t.Errorf("templates() gotEnter = %v, want %v", gotEnter, tt.wantEnter)
-			}
-		})
+	if len(codes) == 0 || len(injections) == 0 || len(creates) == 0 {
+		t.Fatalf("incomplete template plan: %d/%d/%d", len(codes), len(injections), len(creates))
 	}
 }

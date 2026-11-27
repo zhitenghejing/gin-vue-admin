@@ -2,7 +2,7 @@
 
 ## 构建与启动
 
-在仓库根目录执行（需要 Node 24、pnpm 10 和满足 `server/go.mod` 的 Go）：
+在仓库根目录执行（需要 `web/.node-version` 中的 Node、`web/package.json` 中的 pnpm 和满足 `server/go.mod` 的 Go）：
 
 ```bash
 make build-embed
@@ -10,7 +10,7 @@ cd server
 ../build/server -c config.yaml
 ```
 
-构建会安装前端依赖并强制使用同源 `/api` 地址，检查 `web/dist/index.html` 非空，清空并复制产物到 `server/internal/webui/dist`，再用 `-tags embedweb` 编译到 `build/server`。
+构建会核对工具链并用已提交锁文件冻结安装前端依赖并强制使用同源 `/api` 地址，检查 `web/dist/index.html` 非空，清空并复制产物到 `server/internal/webui/dist`，再用 `-tags embedweb` 编译到 `build/server`。
 
 `system.router-prefix` 必须为空；默认配置已满足。启动后访问 `http://localhost:8888/`（端口取决于配置）。开发模式继续使用 Vite 和普通 `go run .`，不需要 dist。
 

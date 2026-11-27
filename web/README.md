@@ -1,33 +1,35 @@
+> 工具链由 `.node-version` 和 `package.json` 固定。仓库统一验证、安装与发行命令见 [开发工作流](../aiDoc/relations/development-workflow.md)。
+
 # gin-vue-admin web
 
 ## Project setup
 
 ```
-npm install
+corepack pnpm install --frozen-lockfile
 ```
 
 ### Compiles and hot-reloads for development
 
 ```
-npm run serve
+corepack pnpm run dev
 ```
 
 ### Compiles and minifies for production
 
 ```
-npm run build
+corepack pnpm run build
 ```
 
 ### Run your tests
 
 ```
-npm run test
+corepack pnpm test
 ```
 
 ### Lints and fixes files
 
 ```
-npm run lint
+corepack pnpm lint
 ```
 
 整理代码结构
@@ -101,6 +103,6 @@ web
  |   |   ├── systemTools        -- 系统配置相关页面
  |   |   └── routerHolder.vue   -- page 入口页面
  ├── vite.config.js             -- vite 配置文件
- └── yarn.lock
+ └── pnpm-lock.yaml
 
 ```

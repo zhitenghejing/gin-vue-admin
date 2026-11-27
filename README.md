@@ -128,10 +128,10 @@ go run .
 cd web
 
 # 安装依赖
-npm install
+corepack pnpm install --frozen-lockfile
 
 # 启动web项目
-npm run serve
+corepack pnpm run dev
 ```
 
 ### 2.3 swagger自动化API文档

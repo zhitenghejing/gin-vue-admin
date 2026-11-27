@@ -5,7 +5,7 @@ SHELL = /bin/bash
 #请选择golang版本
 BUILD_IMAGE_SERVER  = golang:1.26.10
 #请选择node版本
-BUILD_IMAGE_WEB     = node:20
+BUILD_IMAGE_WEB     = node:24.22.0
 #项目名称
 PROJECT_NAME        = github.com/flipped-aurora/gin-vue-admin/server
 #配置文件目录
@@ -19,14 +19,29 @@ TAGS_OPT           ?= latest
 PLUGIN             ?= email
 
 .PHONY: build-embed prepare-embed test-embed build-image-embed
+.PHONY: verify verify-all frontend-install frontend-build frontend-verify setup-hooks
+
+verify:
+	python3 -B scripts/verify.py
+
+verify-all:
+	python3 -B scripts/verify.py --all
+
+frontend-install:
+	python3 -B scripts/frontend.py install
+
+frontend-build:
+	python3 -B scripts/frontend.py build
+
+frontend-verify:
+	python3 -B scripts/frontend.py verify
+
+setup-hooks:
+	bash scripts/install-git-hooks.sh
 
 # 可选发行模式：固定同源 /api，保留普通开发构建。
 prepare-embed:
-	cd web && pnpm install && VITE_BASE_API=/api VITE_FILE_API=/api pnpm run build
-	test -s web/dist/index.html
-	rm -rf server/internal/webui/dist
-	mkdir -p server/internal/webui/dist
-	cp -R web/dist/. server/internal/webui/dist/
+	python3 -B scripts/frontend.py embed
 
 build-embed: prepare-embed
 	mkdir -p build
@@ -67,8 +82,7 @@ build-local:
 
 #本地环境打包前端
 build-web-local:
-	@cd web/ && if [ -d "dist" ];then rm -rf dist; else echo "OK!"; fi \
-	&& yarn config set registry http://mirrors.cloud.tencent.com/npm/ && yarn install && yarn build
+	$(MAKE) frontend-build
 
 #本地环境打包后端
 build-server-local:

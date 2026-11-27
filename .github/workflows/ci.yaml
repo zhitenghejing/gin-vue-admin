@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [ '*' ]
+    branches: [ '**' ]
   pull_request:
   release:
     types: [ created, edited ]
@@ -20,93 +20,40 @@ jobs:
       - name: init
         run: |
           echo "flipped-aurora"
-  frontend:
+  verify:
     if: github.event_name == 'push' || github.event_name == 'pull_request' || github.event_name == 'release'
-    name: Frontend node ${{ matrix.node-version }}
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node-version: [20.19.0]
-    steps:
-      - name: Check out branch
-        uses: actions/checkout@v4
-
-      - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ matrix.node-version }}
-
-      - name: Use npm 11.19.1
-        run: npm install --global npm@11.19.1
-
-      - name: Build test
-        run: |
-          npm install
-          npm run build
-        working-directory: ./web
-
-  embedded:
-    if: github.event_name == 'push' || github.event_name == 'pull_request' || github.event_name == 'release'
-    name: Embedded frontend release
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
-          node-version: '24'
+          node-version-file: web/.node-version
+      - uses: pnpm/action-setup@v4
+        with:
+          package_json_file: web/package.json
       - uses: actions/setup-go@v5
         with:
-          go-version: '1.26.10'
-      - name: Enable pnpm
-        run: corepack enable && corepack prepare pnpm@10.34.8 --activate
-      - name: Build embedded release
-        run: make build-embed
-      - name: Test embedded routing and actual frontend assets
-        run: go test -tags embedweb ./internal/webui
-        working-directory: ./server
-
-  backend:
-    if: github.event_name == 'push' || github.event_name == 'pull_request' || github.event_name == 'release'
-    name: Backend go
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        go-version: ['1.26.10']
-    steps:
-      - name: Set up Go ${{ matrix.go-version }}
-        uses: actions/setup-go@v5
+          go-version-file: server/go.mod
+          cache-dependency-path: server/go.sum
+      - uses: actions/setup-python@v5
         with:
-          go-version: ${{ matrix.go-version }}
-        id: go
-
-      - name: Check out branch
-        uses: actions/checkout@v4
-
-      - name: Download dependencies
-        run: |
-          go get -v -t -d ./...
-          if [ -f Gopkg.toml ]; then
-              curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
-              dep ensure
-          fi
-        working-directory: ./server
-
-      - name: Test and Build
-        run: |
-          go build -v -race
-        working-directory: ./server
+          python-version: '3.12'
+      - name: Verify
+        env:
+          GVA_VERIFY_BASE: ${{ github.event.pull_request.base.sha || github.event.before || 'HEAD' }}
+        run: make verify-all
 
   devops-test:
     if: github.ref == 'refs/heads/test'
     name: devops-test
     needs: 
       - init
-      - backend
-      - frontend
+      - verify
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [20.19.0]
         go-version: ['1.26.10']
     steps:
       - name: Check out branch
@@ -121,13 +68,16 @@ jobs:
           ls -l
           sed -i "s/${PROD}/${TESTING}/g" web/.env.production
           sed -i 's/${basePath}:${basePort}/${basePath}/g' web/src/view/systemTools/formCreate/index.vue
-      - name: Use Node.js ${{ matrix.node-version }}
+      - name: Use pinned Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version-file: web/.node-version
+      - uses: pnpm/action-setup@v4
+        with:
+          package_json_file: web/package.json
       - name: Build-Node
         run: |
-          cd web/ && yarn install && yarn run build
+          make frontend-build
       - name: Use Go ${{ matrix.go-version }}
         uses: actions/setup-go@v5
         with:
@@ -188,8 +138,7 @@ jobs:
     runs-on: ubuntu-latest
     needs:
       - init
-      - backend
-      - frontend
+      - verify
     outputs:
       release_created: ${{ steps.release_please.outputs.release_created }}
       tag_name: ${{ steps.release_please.outputs.tag_name }}
@@ -217,7 +166,6 @@ jobs:
     name: devops-prod
     strategy:
       matrix:
-        node-version: ['20.x']
         go-version: ['1.26.10']
     steps:
       - uses: actions/checkout@v4
@@ -230,13 +178,16 @@ jobs:
           git branch
           ls -l
           sed -i 's/${basePath}:${basePort}/${basePath}/g' web/src/view/systemTools/formCreate/index.vue
-      - name: Use Node.js ${{ matrix.node-version }}
+      - name: Use pinned Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version-file: web/.node-version
+      - uses: pnpm/action-setup@v4
+        with:
+          package_json_file: web/package.json
       - name: Build-Node
         run: |
-          cd web/ && yarn install && yarn run build
+          make frontend-build
       - name: Use Go ${{ matrix.go-version }}
         uses: actions/setup-go@v5
         with:
@@ -279,7 +230,6 @@ jobs:
       - name: Sed Config
         shell: bash
         run: |
-          sed  -i 56c"\        && yarn install && yarn build" Makefile
           make image TAGS_OPT="latest"
           sed -i 's#./entrypoint.sh"#./entrypoint.sh","actions"#g' deploy/docker/Dockerfile
           sed -i "s#COPY build/ /usr/share/nginx/html/#COPY . /opt/gva#g" deploy/docker/Dockerfile
