@@ -77,4 +77,6 @@ CI YAML 与 needs 引用已检查，尚未在 GitHub 执行本次配置。未发
 
 用户明确要求跳过页面验收，继续其余收尾。页面交互与人工验收按要求跳过，不计作通过；异机 LAN 仍未验证。历史章节保留当时结果，需求记录补充后续进展，修正索引失效链接。
 
-本次提交后推送任务分支并检查 GitHub CI；远端结果在运行结束后补记，不以本地通过代替。
+实现与文档提交为 `5fcfdafa`，已推送到 `origin/greasy-turtle`；原始 pre-push 门禁通过。远端 Ubuntu 的 [GitHub CI #45945489919](https://github.com/zhitenghejing/gin-vue-admin/actions/runs/45945489919) 已完成，`verify` 成功，实际执行 `make verify-all`，覆盖前端 lint/测试/构建、18 项 Python 测试、113 项 Go 普通测试、23 项 embed 测试及 vet/竞态检查，测试 0 失败 / 0 跳过（计数包含子测试和重叠）。发布和部署作业因仓库/分支条件跳过，不计作发布验证。
+
+本条远端记录在独立文档提交中补充，后续文档提交的运行结果以对应 GitHub Actions 为准。修改涉及的 8 个本地 Markdown 链接已逐个检查存在性；历史已删除的许可证需求没有恢复。
