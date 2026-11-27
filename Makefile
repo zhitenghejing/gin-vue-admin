@@ -1,10 +1,11 @@
 SHELL = /bin/bash
+.DEFAULT_GOAL := build
 
 #SCRIPT_DIR         = $(shell pwd)/etc/script
 #请选择golang版本
 BUILD_IMAGE_SERVER  = golang:1.26.10
 #请选择node版本
-BUILD_IMAGE_WEB     = node:20
+BUILD_IMAGE_WEB     = node:24.22.0
 #项目名称
 PROJECT_NAME        = github.com/flipped-aurora/gin-vue-admin/server
 #配置文件目录
@@ -16,6 +17,64 @@ REPOSITORY          = registry.cn-hangzhou.aliyuncs.com/${IMAGE_NAME}
 #镜像版本
 TAGS_OPT           ?= latest
 PLUGIN             ?= email
+
+.PHONY: build-embed prepare-embed test-embed build-image-embed
+.PHONY: verify verify-all frontend-install frontend-build frontend-verify setup-hooks
+.PHONY: preview preview-refresh preview-status preview-url preview-check preview-stop preview-destroy
+
+preview:
+	python3 -B scripts/preview.py up
+
+preview-refresh:
+	python3 -B scripts/preview.py refresh
+
+preview-status:
+	python3 -B scripts/preview.py status
+
+preview-url:
+	@python3 -B scripts/preview.py url
+
+preview-check:
+	python3 -B scripts/preview.py check
+
+preview-stop:
+	python3 -B scripts/preview.py stop --if-exists
+
+preview-destroy:
+	python3 -B scripts/preview.py destroy --if-exists
+
+verify:
+	python3 -B scripts/verify.py
+
+verify-all:
+	python3 -B scripts/verify.py --all
+
+frontend-install:
+	python3 -B scripts/frontend.py install
+
+frontend-build:
+	python3 -B scripts/frontend.py build
+
+frontend-verify:
+	python3 -B scripts/frontend.py verify
+
+setup-hooks:
+	bash scripts/install-git-hooks.sh
+
+# 可选发行模式：固定同源 /api，保留普通开发构建。
+prepare-embed:
+	python3 -B scripts/frontend.py embed
+
+build-embed: prepare-embed
+	mkdir -p build
+	cd server && go build -tags embedweb -o ../build/server .
+
+# 先生成真实前端产物，再验证发行构建。
+test-embed: prepare-embed
+	cd server && go test -tags embedweb ./internal/webui
+
+build-image-embed:
+	docker build -f deploy/docker/Dockerfile.embed -t ${REPOSITORY}/server-embed:${TAGS_OPT} .
 
 #容器环境前后端共同打包
 build: build-web build-server
@@ -45,8 +104,7 @@ build-local:
 
 #本地环境打包前端
 build-web-local:
-	@cd web/ && if [ -d "dist" ];then rm -rf dist; else echo "OK!"; fi \
-	&& yarn config set registry http://mirrors.cloud.tencent.com/npm/ && yarn install && yarn build
+	$(MAKE) frontend-build
 
 #本地环境打包后端
 build-server-local:

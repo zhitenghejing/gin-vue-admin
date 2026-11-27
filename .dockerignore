@@ -1,0 +1,5 @@
+# Also keep legacy Docker builders from sending dependency trees.
+# Keep build/ available for the existing deploy/docker/Dockerfile.
+.git
+**/node_modules
+server/internal/webui/dist

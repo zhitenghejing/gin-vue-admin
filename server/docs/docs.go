@@ -7407,6 +7407,10 @@ const docTemplate = `{
                 "iplimit-time": {
                     "type": "integer"
                 },
+                "listen-host": {
+                    "description": "Listen host; empty preserves the default all-interface binding",
+                    "type": "string"
+                },
                 "oss-type": {
                     "description": "Oss类型",
                     "type": "string"

@@ -1,0 +1,21 @@
+FROM node:24.22.0-slim AS frontend
+WORKDIR /app/web
+RUN corepack enable && corepack prepare pnpm@10.34.8 --activate
+COPY web/ ./
+RUN pnpm install --frozen-lockfile --prod=false && VITE_BASE_API=/api VITE_FILE_API=/api pnpm run build
+
+FROM golang:1.26.10-alpine AS backend
+WORKDIR /app/server
+COPY server/ ./
+COPY --from=frontend /app/web/dist/ ./internal/webui/dist/
+RUN CGO_ENABLED=0 go build -tags embedweb -o /out/server .
+
+FROM alpine:3.23
+ENV TZ=Asia/Shanghai
+RUN apk add --no-cache ca-certificates tzdata
+WORKDIR /app
+COPY --from=backend /out/server ./server
+COPY server/resource/ ./resource/
+COPY server/config.docker.yaml ./config.docker.yaml
+EXPOSE 8888
+ENTRYPOINT ["./server", "-c", "config.docker.yaml"]

@@ -9,7 +9,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 )
 
@@ -19,7 +18,7 @@ type server interface {
 }
 
 // initServer 启动服务并实现优雅关闭
-func initServer(address string, router *gin.Engine, readTimeout, writeTimeout time.Duration) {
+func initServer(address string, router http.Handler, readTimeout, writeTimeout time.Duration) {
 	// 创建服务
 	srv := &http.Server{
 		Addr:           address,

@@ -109,10 +109,10 @@ go build -o server main.go (windows the compile command is go build -o server.ex
 cd web
 
 # install dependency
-npm install
+corepack pnpm install --frozen-lockfile
 
 # develop
-npm run serve
+corepack pnpm run dev
 ```
 
 ### 2.2 Server

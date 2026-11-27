@@ -43,13 +43,8 @@ func Routers() *gin.Engine {
 
 	systemRouter := router.RouterGroupApp.System
 	exampleRouter := router.RouterGroupApp.Example
-	// 如果想要不使用nginx代理前端网页，可以修改 web/.env.production 下的
-	// VUE_APP_BASE_API = /
-	// VUE_APP_BASE_PATH = http://localhost
-	// 然后执行打包命令 npm run build。在打开下面3行注释
-	// Router.StaticFile("/favicon.ico", "./dist/favicon.ico")
-	// Router.Static("/assets", "./dist/assets")   // dist里面的静态资源
-	// Router.StaticFile("/", "./dist/index.html") // 前端网页入口页面
+	// 如需由 Go 提供前端页面，在仓库根目录执行 make build-embed。
+	// HTTP 入口负责内嵌资源及 /api 前缀分流，此处保持原生 API 路径。
 
 	Router.StaticFS(global.GVA_CONFIG.Local.StorePath, justFilesFilesystem{http.Dir(global.GVA_CONFIG.Local.StorePath)})
 	// Router.Use(middleware.LoadTls())  // 如果需要使用https 请打开此中间件 然后前往 core/server.go 将启动模式 更变为 Router.RunTLS("端口","你的cre/pem文件","你的key文件")
